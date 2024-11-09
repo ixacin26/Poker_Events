@@ -16,7 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from poker_events import views  # Import views from the appropriate directory
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', views.home, name='home'),  # Add this line
 ]
