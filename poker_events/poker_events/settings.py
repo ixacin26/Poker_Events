@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'poker_data',
+    'poker_data', #Add poker_data to the installed apps
 ]
 
 MIDDLEWARE = [
