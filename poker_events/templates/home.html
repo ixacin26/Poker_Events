@@ -71,7 +71,7 @@
                       <strong>{{ forloop.counter }}.</strong>
                     </div>
                     <div class="player-name col-6">{{ player.name }}</div>
-                    <div class="earnings col-3 text-end">€{{ player.total_earnings|floatformat:2 }}</div>
+                    <div class="earnings col-3 text-end">€{{ player.total_trend_earnings|floatformat:2 }}</div>
                   </li>
                 {% endfor %}
               </ol>

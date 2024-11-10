@@ -1,2 +1,3 @@
-# Ignoriere das env-Verzeichnis
+# Ignoriere das env-Verzeichnisse
 env/
+poker_events/env
