@@ -24,10 +24,14 @@ def home(request):
 
     #TODO add "Latest ASOP Ranking"
 
+    # Check if any events are active
+    active_events_exist = Event.objects.filter(active=True).exists()
+
     # Render the home page with both player lists
     return render(request, 'home.html', {
         'top_players': top_players,
         'trend_players': trend_players,
+        'active_events_exist': active_events_exist,  # Pass this to the template 
     })
 
 #The following view defines the data for the add_event-template
