@@ -1,0 +1,32 @@
+<!-- templates/add_event.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <h2>Add New Event</h2>
+    <form method="post" action="{% url 'add_event' %}">
+      {% csrf_token %}
+      <div class="form-group mb-3">
+        <label for="host_location">Host Location</label>
+        <input type="text" name="host_location" class="form-control" id="host_location" placeholder="Enter host location" required />
+      </div>
+      <div class="form-group mb-3">
+        <label for="date">Date</label>
+        <input type="date" name="date" class="form-control" id="date" required />
+      </div>
+      <div class="form-group mb-3">
+        <label for="pot">Pot</label>
+        <input type="number" step="0.01" name="pot" class="form-control" id="pot" placeholder="Enter pot amount" required />
+      </div>
+      <div class="form-group mb-3">
+        <label for="active">Is Active?</label>
+        <input type="checkbox" name="active" id="active" checked />
+      </div>
+      <div class="form-group mb-3">
+        <label for="asop">ASOP</label>
+        <input type="checkbox" name="asop" id="asop" />
+      </div>
+      <button type="submit" class="btn btn-primary">Add Event</button>
+    </form>
+  </div>
+{% endblock %}
