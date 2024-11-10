@@ -27,11 +27,28 @@ def home(request):
     # Check if any events are active
     active_events_exist = Event.objects.filter(active=True).exists()
 
+     # ASOP Ranking (All ASOP events)
+    asop_players = (
+        Player.objects.filter(event_participations__event__asop=True)
+        .annotate(total_asop_earnings=Sum('event_participations__earnings'))
+        .order_by('-total_asop_earnings')
+    )
+
+    # Last ASOP Ranking (Only the latest ASOP event)
+    last_asop_event = Event.objects.filter(asop=True).order_by('-date').first()
+    last_asop_players = (
+        Player.objects.filter(event_participations__event=last_asop_event)
+        .annotate(last_asop_earnings=Sum('event_participations__earnings'))
+        .order_by('-last_asop_earnings')
+    )
+
     # Render the home page with both player lists
     return render(request, 'home.html', {
         'top_players': top_players,
         'trend_players': trend_players,
-        'active_events_exist': active_events_exist,  # Pass this to the template 
+        'asop_players': asop_players,
+        'last_asop_players': last_asop_players,
+        'active_events_exist': active_events_exist,
     })
 
 #The following view defines the data for the add_event-template
