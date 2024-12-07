@@ -1,6 +1,5 @@
-<!-- templates/add_event.html -->
 {% extends 'base.html' %}
-<!-- TODO add logic like in database for obligatory fields -->
+
 {% block content %}
   <div class="container mt-5">
     <h2>Add New Event</h2>
@@ -9,6 +8,19 @@
       <div class="form-group mb-3">
         <label for="host_location">Host Location</label>
         <input type="text" name="host_location" class="form-control" id="host_location" placeholder="Enter host location" required />
+      </div>
+      <div class="form-group mb-3">
+        <label for="asop">ASOP</label>
+        <input type="checkbox" name="asop" id="asop" />
+      </div>
+      <div class="form-group mb-3" id="host_player_group">
+        <label for="host_player">Host Player</label>
+        <select name="host_player" id="host_player" class="form-select" required>
+          <option value="" disabled selected>Select Host Player</option>
+          {% for player in players %}
+            <option value="{{ player.id }}">{{ player.name }}</option>
+          {% endfor %}
+        </select>
       </div>
       <div class="form-group mb-3">
         <label for="date">Date</label>
@@ -22,12 +34,29 @@
         <label for="active">Is Active?</label>
         <input type="checkbox" name="active" id="active" checked />
       </div>
-      <div class="form-group mb-3">
-        <label for="asop">ASOP</label>
-        <input type="checkbox" name="asop" id="asop" />
-      </div>
       <button type="submit" class="btn btn-primary">Add Event</button>
       <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
     </form>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const asopCheckbox = document.getElementById('asop')
+      const hostPlayerGroup = document.getElementById('host_player_group')
+      const hostPlayerSelect = document.getElementById('host_player')
+    
+      asopCheckbox.addEventListener('change', function () {
+        if (asopCheckbox.checked) {
+          // Hide and clear Host Player dropdown if ASOP is checked
+          hostPlayerSelect.value = '' // Clear selection
+          hostPlayerSelect.required = false // Make it non-mandatory
+          hostPlayerGroup.style.display = 'none' // Hide the dropdown
+        } else {
+          // Show and make Host Player dropdown mandatory if ASOP is unchecked
+          hostPlayerSelect.required = true
+          hostPlayerGroup.style.display = 'block'
+        }
+      })
+    })
+  </script>
 {% endblock %}
