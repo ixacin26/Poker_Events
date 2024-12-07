@@ -19,18 +19,27 @@
                   <strong>Date:</strong> {{ event.date }} <br />
                   <strong>Pot:</strong> €{{ event.pot }} <br />
                   <strong>Active:</strong> {{ event.active|yesno:'Yes,No' }} <br />
-
-                  <!-- Display the players associated with the active event -->
-                  <strong>Players:</strong>
-                  <ul>
-                    {% for participation in event.players %}
-                      <li>{{ participation.player.name }} (Earnings: €{{ participation.earnings }})</li>
-                    {% empty %}
-                      <li>No players added yet.</li>
-                    {% endfor %}
-                  </ul>
                 </p>
-                <a href="{% url 'end_event' event.id %}" class="btn btn-danger">End Event</a>
+
+                <!-- Display the players associated with the active event in cards -->
+                <strong>Players:</strong>
+                <div class="row">
+                  {% for participation in event.players %}
+                    <div class="col-md-4 mb-3">
+                      <div class="card">
+                        <div class="card-body">
+                          <h5 class="card-title">{{ participation.player.name }}</h5>
+                          <p class="card-text">Earnings: €{{ participation.earnings }}</p>
+                        </div>
+                      </div>
+                    </div>
+                  {% empty %}
+                    <p>No players added yet.</p>
+                  {% endfor %}
+                </div>
+
+                <!-- End Event Button (outside player loop) -->
+                <a href="{% url 'end_event' event.id %}" class="btn btn-danger mt-3">End Event</a>
               </li>
             {% endfor %}
           </ul>
