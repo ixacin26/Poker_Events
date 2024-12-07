@@ -6,3 +6,8 @@
         background-color: #fff; /* Ensure cards have a white background */
         margin-bottom: 20px; /* Add space between cards */
       }
+
+.btn-secondary {
+        margin-left: 10px;
+    }
+    

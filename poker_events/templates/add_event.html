@@ -1,6 +1,6 @@
 <!-- templates/add_event.html -->
 {% extends 'base.html' %}
-
+<!-- TODO add logic like in database for obligatory fields -->
 {% block content %}
   <div class="container mt-5">
     <h2>Add New Event</h2>
@@ -27,6 +27,7 @@
         <input type="checkbox" name="asop" id="asop" />
       </div>
       <button type="submit" class="btn btn-primary">Add Event</button>
+      <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
     </form>
   </div>
 {% endblock %}
