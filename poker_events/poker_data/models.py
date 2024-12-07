@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Sum
 
 class Player(models.Model):
+    # Add logic for an inactive player
     name = models.CharField(max_length=100)
     founding_member = models.BooleanField(default=False)
     first_participation = models.DateField(blank=True, null=True)

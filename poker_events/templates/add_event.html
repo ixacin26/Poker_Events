@@ -41,6 +41,7 @@
         <button type="submit" class="btn btn-primary" formaction="{% url 'add_players' event.id %}">Add Players</button>
       {% else %}
         <button type="submit" class="btn btn-primary">Create Event</button>
+        <a href="{% url 'home' %}" class="btn btn-secondary ms-2">Cancel</a>
       {% endif %}
     </form>
   </div>
