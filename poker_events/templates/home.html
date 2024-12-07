@@ -6,22 +6,38 @@
 
 {% block content %}
   <!-- Active Event Section -->
-  <div class="container mt-5">
+  <div class="container my-5">
     {% if active_events_exist %}
-      <h3>Active Event</h3>
-      <ul>
-        {% for event in active_events %}
-          <li>
-            <strong>Host Location:</strong> {{ event.host_location }} <br />
-            <strong>Date:</strong> {{ event.date }} <br />
-            <strong>Pot:</strong> {{ event.pot }} <br />
-            <strong>Active:</strong> {{ event.active|yesno:'Yes,No' }} <br />
-            <a href="{% url 'end_event' event.id %}" class="btn btn-info">End Event</a>
-          </li>
-        {% endfor %}
-      </ul>
+      <div class="card shadow text-center p-4">
+        <h3 class="card-title">Active Event</h3>
+        <div class="card-body">
+          <ul class="list-unstyled">
+            {% for event in active_events %}
+              <li class="mb-4">
+                <p>
+                  <strong>Host Location:</strong> {{ event.host_location }} <br />
+                  <strong>Date:</strong> {{ event.date }} <br />
+                  <strong>Pot:</strong> €{{ event.pot }} <br />
+                  <strong>Active:</strong> {{ event.active|yesno:'Yes,No' }} <br />
+
+                  <!-- Display the players associated with the active event -->
+                  <strong>Players:</strong>
+                  <ul>
+                    {% for participation in event.players %}
+                      <li>{{ participation.player.name }} (Earnings: €{{ participation.earnings }})</li>
+                    {% empty %}
+                      <li>No players added yet.</li>
+                    {% endfor %}
+                  </ul>
+                </p>
+                <a href="{% url 'end_event' event.id %}" class="btn btn-danger">End Event</a>
+              </li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
     {% else %}
-      <p>No active events at the moment.</p>
+      <p class="text-center mt-5">No active events at the moment.</p>
     {% endif %}
   </div>
 

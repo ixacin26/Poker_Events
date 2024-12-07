@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Sum, Q
-from poker_data.models import Player, Event
+from poker_data.models import Player, Event, EventParticipation
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 
-# The following view calculates the necessary data for the ranking-cards in home.html
+# The following view calculates the necessary data for home.html
 def home(request):
     # Fetch and sort players by total earnings for the "Top Poker Players Ranking"
     top_players = Player.objects.all().order_by('-total_earnings')
@@ -25,6 +25,10 @@ def home(request):
 
     # Fetch the active event(s) to display on the home page
     active_events = Event.objects.filter(active=True)
+
+    # Fetch the players for each active event
+    for event in active_events:
+        event.players = event.eventparticipation_set.all()  # Get players associated with the event
 
     # Check if any events are active
     active_events_exist = active_events.exists()
@@ -54,14 +58,19 @@ def home(request):
         'active_events': active_events,  # Pass active events to the template
     })
 
-# The following view defines the data for the add_event-template
 def add_event(request):
+    event_created = False  # Flag to track if the event was created
+
     if request.method == 'POST':
         host_location = request.POST.get('host_location')
         date = request.POST.get('date')
         pot = request.POST.get('pot')
         active = request.POST.get('active') == 'on'
         asop = request.POST.get('asop') == 'on'
+        host_player_id = request.POST.get('host_player')
+
+        # Fetch the selected host player
+        host_player = Player.objects.get(id=host_player_id) if host_player_id else None
 
         # Create and save a new Event instance
         new_event = Event.objects.create(
@@ -69,11 +78,22 @@ def add_event(request):
             date=date,
             pot=pot,
             active=active,
-            asop=asop
+            asop=asop,
+            host_player=host_player
         )
-        return redirect('home')  # TODO Redirect to home (or another page) after adding event
+        
+        event_created = True  # Set the flag to True when the event is created
 
-    return render(request, 'add_event.html')
+        # Redirect to the page for adding players to the event
+        return redirect('add_players', event_id=new_event.id)  # Redirect to the add_players page
+
+    # Fetch all players to display in the dropdown
+    players = Player.objects.all()
+
+    return render(request, 'add_event.html', {
+        'players': players,
+        'event_created': event_created  # Pass the flag to the template
+    })
 
 # Receive the event ID
 def end_event(request, event_id):
@@ -86,3 +106,22 @@ def end_event(request, event_id):
 
     # Redirect back to the home page or to a page that shows all events
     return redirect('home')  # Adjust the URL name if necessary
+
+# add players to an recent created event
+def add_players(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    players = Player.objects.all()
+
+    if request.method == 'POST':
+        selected_players = request.POST.getlist('players')  # Get selected players from the form
+        for player_id in selected_players:
+            player = Player.objects.get(id=player_id)
+            EventParticipation.objects.create(event=event, player=player)
+
+        # Redirect to home or another page after adding players
+        return redirect('home')
+
+    return render(request, 'add_players.html', {
+        'event': event,
+        'players': players
+    })

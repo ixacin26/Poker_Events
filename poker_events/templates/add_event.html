@@ -35,8 +35,13 @@
         <label for="active">Is Active?</label>
         <input type="checkbox" name="active" id="active" checked />
       </div>
-      <button type="submit" class="btn btn-primary">Add Event</button>
-      <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
+
+      {% if event_created %}
+        <!-- Show "Add Players" Button if Event is Created -->
+        <button type="submit" class="btn btn-primary" formaction="{% url 'add_players' event.id %}">Add Players</button>
+      {% else %}
+        <button type="submit" class="btn btn-primary">Create Event</button>
+      {% endif %}
     </form>
   </div>
 

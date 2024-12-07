@@ -24,5 +24,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
     path('add-event/', views.add_event, name='add_event'),
+    path('add_players/<int:event_id>/', views.add_players, name='add_players'),
     path('end_event/<int:event_id>/', views.end_event, name='end_event'),
 ]
