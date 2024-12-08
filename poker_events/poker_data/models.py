@@ -43,6 +43,7 @@ class EventParticipation(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='event_participations')
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     earnings = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    buy_in = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # New buy-in field
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)

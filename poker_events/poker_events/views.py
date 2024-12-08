@@ -1,5 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.forms import modelformset_factory
 from django.db.models import Sum, Q
+from django.db import transaction
 from poker_data.models import Player, Event, EventParticipation
 from django.utils import timezone
 from django.core.exceptions import ValidationError
@@ -125,3 +127,33 @@ def add_players(request, event_id):
         'event': event,
         'players': players
     })
+
+#View for buy_in in the beginning of an event as well as for re-buys
+def buy_in(request, event_id):
+    event = get_object_or_404(Event, id=event_id)
+    participations = EventParticipation.objects.filter(event=event)
+
+    # Create a modelformset for EventParticipation
+    BuyInFormSet = modelformset_factory(
+        EventParticipation,
+        fields=('buy_in',),
+        extra=0  # No extra empty forms
+    )
+
+    if request.method == 'POST':
+        formset = BuyInFormSet(request.POST, queryset=participations)
+        if formset.is_valid():
+            with transaction.atomic():
+                # Update the buy_in field for each player and adjust the event's pot
+                for form in formset:
+                    participation = form.save(commit=False)
+                    event.pot -= participation.buy_in  # Subtract buy-in from event pot
+                    participation.save()
+                event.save()
+
+            return redirect('home')  # Redirect to home after saving
+
+    else:
+        formset = BuyInFormSet(queryset=participations)
+
+    return render(request, 'buy_in.html', {'formset': formset, 'event': event})
