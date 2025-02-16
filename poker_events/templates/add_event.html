@@ -8,7 +8,7 @@
       {% csrf_token %}
       <div class="form-group mb-3">
         <label for="host_location">Host Location</label>
-        <input type="text" name="host_location" class="form-control" id="host_location" placeholder="Enter host location" required />
+        <input type="text" name="host_location" class="form-control w-50" id="host_location" placeholder="Enter host location" required />
       </div>
       <div class="form-group mb-3">
         <label for="asop">ASOP</label>
@@ -16,7 +16,7 @@
       </div>
       <div class="form-group mb-3" id="host_player_group">
         <label for="host_player">Host Player</label>
-        <select name="host_player" id="host_player" class="form-select" required>
+        <select name="host_player" id="host_player" class="form-select w-25" required>
           <option value="" disabled selected>Select Host Player</option>
           {% for player in players %}
             <option value="{{ player.id }}">{{ player.name }}</option>
@@ -25,11 +25,11 @@
       </div>
       <div class="form-group mb-3">
         <label for="date">Date</label>
-        <input type="date" name="date" class="form-control" id="date" required />
+        <input type="date" name="date" class="form-control w-25" id="date" required />
       </div>
       <div class="form-group mb-3">
         <label for="pot">Pot</label>
-        <input type="number" step="50" name="pot" class="form-control" id="pot" placeholder="Enter maximum chip amount" required />
+        <input type="number" step="50" name="pot" class="form-control w-25" id="pot" placeholder="Enter maximum chip amount" required />
       </div>
       <div class="form-group mb-3">
         <label for="active">Is Active?</label>
