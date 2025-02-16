@@ -109,18 +109,31 @@ def end_event(request, event_id):
     # Redirect back to the home page or to a page that shows all events
     return redirect('home')  # Adjust the URL name if necessary
 
-# add players to an recent created event
+# add players to a recently created event
 def add_players(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     players = Player.objects.all()
 
     if request.method == 'POST':
+        # Überprüfen, ob der "Cancel"-Button geklickt wurde
+        if 'cancel' in request.POST:
+            event.delete()  # Lösche den Event
+            return redirect('home')  # Weiterleitung zur Startseite
+
+        # Spieler hinzufügen, wenn der "Cancel"-Button nicht geklickt wurde
         selected_players = request.POST.getlist('players')  # Get selected players from the form
         for player_id in selected_players:
             player = Player.objects.get(id=player_id)
-            EventParticipation.objects.create(event=event, player=player)
+            buy_in_value = request.POST.get(f'buy_in_{player_id}', 0)  # Get the buy-in value for the Player
 
-        # Redirect to home or another page after adding players
+            # Create EventParticipation with buy-in value
+            EventParticipation.objects.create(
+                event=event, 
+                player=player,
+                buy_in=buy_in_value  # Set the buy-in value for the player
+            )
+
+        # Redirect to home after adding players
         return redirect('home')
 
     return render(request, 'add_players.html', {

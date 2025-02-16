@@ -3,27 +3,34 @@
 
 {% block content %}
   <div class="container mt-5">
-    <h2>Add Players to Event: {{ event.host_location }} - {{ event.date }}</h2>
+    <h2>Add Players to Event:<h2>
+    <h1 class="display-4 text-primary bg-light p-3"> {{ event.host_location }} - {{ event.date }}</h1>
 
     <form method="POST">
       {% csrf_token %}
       <div class="form-group">
         <label>Select Players</label>
         <div class="form-check">
-          <!-- TODO define check all players for active event -->
-          <input type="checkbox" id="check_all" />Check All
+          <input type="checkbox" id="check_all" class="form-check-input"/> Check All
         </div>
         {% for player in players %}
-          <div class="form-check">
+          <div class="form-check ms-3">
+          <!-- Checkbox for individual player selection -->
             <input type="checkbox" name="players" value="{{ player.id }}" class="form-check-input" id="player_{{ player.id }}" />
-            <label class="form-check-label" for="player_{{ player.id }}">{{ player.name }}</label>
+            <label class="form-check-label" for="player_{{ player.id }}">{{ player.name }}</label><br>
+          <!-- Buy-In Input for each selected player -->
+            <label for="buy_in_{{ player.id }}" class="ml-2">Buy-In:</label>
+            <input type="number" name="buy_in_{{ player.id }}" id="buy_in_{{ player.id }}" class="form-control mt-1 w-25" step="5" min="5" />
           </div>
         {% endfor %}
       </div>
 
+      <button type="submit" name="cancel" class="btn btn-secondary mt-3">Cancel</button>
       <button type="submit" class="btn btn-primary mt-3">Add Players</button>
+      
     </form>
   </div>
+  <script src="{% static 'js/add_players.js' %}"></script>
 {% endblock %}
 
-<script src="{% static 'js/add_players.js' %}"></script>
+
