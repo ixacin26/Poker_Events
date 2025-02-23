@@ -115,7 +115,6 @@ def end_event(request, event_id):
     # Redirect back to the home page or to a page that shows all events
     return redirect('home')  # Adjust the URL name if necessary
 
-# add players to a recently created event
 def add_players(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     players = Player.objects.all()
@@ -130,22 +129,39 @@ def add_players(request, event_id):
         selected_players = request.POST.getlist('players')  # Get selected players from the form
         
         total_initial_buy_in = Decimal('0.00')  # 🛠 Initialisieren der Gesamt-Buy-Ins
+        total_re_buy = Decimal('0.00')  # 🛠 Initialisieren der Gesamt-Re-Buys
 
         for player_id in selected_players:
             player = Player.objects.get(id=player_id)
             initial_buy_in_value = Decimal(request.POST.get(f'initial_buy_in_{player_id}', '0'))  # 🛠 Korrektur des Variablennamens
 
-            # Create EventParticipation with initial buy-in value
-            EventParticipation.objects.create(
-                event=event, 
-                player=player,
-                initial_buy_in=initial_buy_in_value  # 🛠 Korrektes Feld
-            )
+            # Überprüfen, ob der Spieler bereits eine EventParticipation hat
+            existing_participation = EventParticipation.objects.filter(event=event, player=player).first()
+            
+            if existing_participation:
+                # Falls es bereits ein initial_buy_in gibt, überspringen wir es beim Re-Buy
+                if existing_participation.initial_buy_in > 0:
+                    continue  # Wenn es bereits ein initial_buy_in gibt, überspringen wir diesen Spieler
+                else:
+                    # Falls es kein initial_buy_in gibt, dann ist es ein Re-Buy
+                    re_buy_value = Decimal(request.POST.get(f're_buy_{player_id}', '0'))
+                    existing_participation.re_buy = re_buy_value  # Setze den Re-Buy-Wert
+                    existing_participation.save()
+                    total_re_buy += re_buy_value  # Füge den Re-Buy zur Gesamtzahl hinzu
+            else:
+                # Erstelle EventParticipation mit initial buy-in value (nur beim ersten Mal)
+                EventParticipation.objects.create(
+                    event=event, 
+                    player=player,
+                    initial_buy_in=initial_buy_in_value if initial_buy_in_value > 0 else Decimal('0.00')  # Nur wenn der Wert > 0 ist
+                )
 
-            total_initial_buy_in += initial_buy_in_value  # 🛠 Summe der Initial-Buy-Ins berechnen
+                # Summe der Initial-Buy-Ins berechnen (nur für den ersten Buy-In)
+                if initial_buy_in_value > 0:
+                    total_initial_buy_in += initial_buy_in_value
 
-        # 🛠 Pot-Update: Subtrahiere die gesamten Initial Buy-Ins
-        event.pot -= total_initial_buy_in
+        # Pot-Update: Subtrahiere die gesamten Initial Buy-Ins und Re-Buys
+        event.remaining_chips -= (total_initial_buy_in + total_re_buy)
         event.save()
 
         # Redirect to home after adding players
@@ -157,45 +173,41 @@ def add_players(request, event_id):
     })
 
 
-# View for buy_in in the beginning of an event as well as for re-buys
-def buy_in(request, event_id):
+
+
+# View für Re-Buys (keine Initial Buy-Ins mehr)
+def re_buy(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     participations = EventParticipation.objects.filter(event=event)
 
-    BuyInFormSet = modelformset_factory(
+    # Formular-Set nur für 're_buy', kein 'initial_buy_in'
+    ReBuyFormSet = modelformset_factory(
         EventParticipation,
-        fields=('initial_buy_in', 're_buy',),  # Korrektur: Wir bearbeiten nur initial_buy_in und re_buy!
+        fields=('re_buy',),  # Nur das Re-Buy-Feld
         extra=0
     )
 
     if request.method == 'POST':
         print("POST-Daten:", request.POST)
 
-        formset = BuyInFormSet(request.POST, queryset=participations)
+        formset = ReBuyFormSet(request.POST, queryset=participations)
 
         if formset.is_valid():
             instances = formset.save(commit=False)
             print("Formset ist gültig, speichere Daten...")
 
             with transaction.atomic():
-                total_initial_buy_in = Decimal('0.00')
                 total_re_buy = Decimal('0.00')
 
                 for form in formset:
                     participation = form.save(commit=False)
-                    initial_buy_in = Decimal(form.cleaned_data.get('initial_buy_in', '0.00'))  # Verhindert NoneType-Fehler
                     re_buy = Decimal(form.cleaned_data.get('re_buy', '0.00'))  # Verhindert NoneType-Fehler
-
-                    # Initial Buy-In nur speichern, wenn der Wert gesetzt wurde
-                    if initial_buy_in > Decimal('0.00') and participation.initial_buy_in == 0:
-                        participation.initial_buy_in = initial_buy_in
-                        total_initial_buy_in += initial_buy_in  # Summe des Initial-Buy-In berechnen
 
                     # Re-Buy nur speichern, wenn der Wert gesetzt wurde
                     if re_buy > Decimal('0.00'):
                         if event.remaining_chips < re_buy:
                             messages.error(request, "Nicht genügend Chips im Event für dieses Re-Buy!")
-                            return redirect('buy_in', event_id=event.id)
+                            return redirect('re_buy', event_id=event.id)
 
                         total_re_buy += re_buy  # Summe der Re-Buys berechnen
                         participation.re_buy += re_buy  # Re-Buy zum bestehenden Wert hinzufügen
@@ -203,20 +215,18 @@ def buy_in(request, event_id):
                     participation.save()
 
                 # Pot-Update nach allen Änderungen
-                event.pot -= total_initial_buy_in + total_re_buy  # Pot wird um Initial-Buy-In und Re-Buys reduziert
                 event.remaining_chips -= total_re_buy  # Remaining-Chips nach Re-Buys aktualisieren
                 event.save()
 
-            messages.success(request, "Buy-In und/oder Re-Buy erfolgreich gespeichert!")  # Erfolgsmeldung
+            messages.success(request, "Re-Buy erfolgreich gespeichert!")  # Erfolgsmeldung
             return redirect('home')  # Weiterleitung zur Startseite
 
         else:
-            messages.error(request, "Fehler beim Speichern der Buy-Ins und Re-Buys!")  # Fehler ausgeben
+            messages.error(request, "Fehler beim Speichern der Re-Buys!")  # Fehler ausgeben
             print("Formset Fehler:", formset.errors)  # Debugging in der Konsole
             
-
     else:
-        formset = BuyInFormSet(queryset=participations)
+        formset = ReBuyFormSet(queryset=participations)
 
-    return render(request, 'buy_in.html', {'formset': formset, 'event': event})
+    return render(request, 're_buy.html', {'formset': formset, 'event': event})
 

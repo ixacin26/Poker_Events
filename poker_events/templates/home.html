@@ -17,7 +17,8 @@
                 <p>
                   <strong>Host Location:</strong> {{ event.host_location }} <br />
                   <strong>Date:</strong> {{ event.date }} <br />
-                  <strong>Pot:</strong> €{{ event.pot }} <br />
+                  <strong>Pot:</strong> € {{ event.pot }} <br />
+                  <strong>Remaining Chips:</strong> € {{ event.remaining_chips }} <br />
                   <strong>Active:</strong> {{ event.active|yesno:'Yes,No' }} <br />
                 </p>
 
@@ -30,8 +31,8 @@
                       <div class="card">
                         <div class="card-body">
                           <h5 class="card-title">{{ participation.player.name }}</h5>
-                          <p class="card-text">Buy-In: €{{ participation.total_buy_in }}</p>
-                           <a href="{% url 'buy_in' event.id %}" class="btn btn-success">Re-Buy</a>
+                          <p class="card-text">Buy-In: € {{ participation.total_buy_in }}</p>
+                           <a href="{% url 're_buy' event.id %}" class="btn btn-success">Re-Buy</a>
                         </div>
                       </div>
                     </div>

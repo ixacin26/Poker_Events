@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% block content %}
   <div class="container my-5">
-    <h2>Set Buy-In for Event: {{ event.host_location }} on {{ event.date }}</h2>
+    <h2>Set Re-Buy for Event: {{ event.host_location }} on {{ event.date }}</h2>
     
     <!-- 🔹 NEU: Anzeige des verbleibenden Pots -->
     <div class="alert alert-info">
-      Remaining Pot: €{{ event.pot }}
+      Remaining Chips: €{{ event.remaining_chips }}
     </div>
 
     <!-- 🔹 NEU: Fehlermeldung anzeigen, falls nicht genug Chips verfügbar sind -->
@@ -22,6 +22,7 @@
         <thead>
           <tr>
             <th>Player</th>
+            <th>Initial Buy-In</th>
             <th>Re-Buy Amount</th>
           </tr>
         </thead>
@@ -29,9 +30,13 @@
           {% for form in formset %}
             <tr>
               <td>{{ form.instance.player.name }}</td>
-              <td>{{ form.initial_buy_in }}</td>
-              <td>{{ form.re_buy }}</td>
-              <td>{{ form.id }}  <!-- 🔹 Hier hinzufügen! Verstecktes Feld für ID -->
+              <td>{{ form.instance.initial_buy_in }}</td> <!-- Zeigt den Initial-Buy-In an -->
+              <td>
+                <!-- Re-Buy Feld: Verwende das form.re_buy direkt -->
+                {{ form.re_buy }}
+              </td>
+              <!-- Verstecktes ID-Feld für jedes Formular im Formset -->
+              <td>{{ form.id }} <!-- Hier das versteckte ID-Feld für das Formular hinzufügen --></td>
             </tr>
           {% endfor %}
         </tbody>
@@ -42,5 +47,4 @@
       </div>
     </form>
   </div>
-  {% if messages %}...{% endif %}
 {% endblock %}

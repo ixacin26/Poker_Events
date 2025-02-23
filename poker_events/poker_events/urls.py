@@ -26,5 +26,5 @@ urlpatterns = [
     path('add-event/', views.add_event, name='add_event'),
     path('add_players/<int:event_id>/', views.add_players, name='add_players'),
     path('end_event/<int:event_id>/', views.end_event, name='end_event'),
-    path('buy_in/<int:event_id>/', views.buy_in, name='buy_in'),
+    path('re_buy/<int:event_id>/', views.re_buy, name='re_buy'),
 ]
