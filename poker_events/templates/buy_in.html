@@ -2,20 +2,36 @@
 {% block content %}
   <div class="container my-5">
     <h2>Set Buy-In for Event: {{ event.host_location }} on {{ event.date }}</h2>
+    
+    <!-- 🔹 NEU: Anzeige des verbleibenden Pots -->
+    <div class="alert alert-info">
+      Remaining Pot: €{{ event.pot }}
+    </div>
+
+    <!-- 🔹 NEU: Fehlermeldung anzeigen, falls nicht genug Chips verfügbar sind -->
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-danger">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+
     <form method="post" class="form-group">
       {% csrf_token %}
+      {{ formset.management_form }}
       <table class="table">
         <thead>
           <tr>
             <th>Player</th>
-            <th>Buy-In Amount</th>
+            <th>Re-Buy Amount</th>
           </tr>
         </thead>
         <tbody>
           {% for form in formset %}
             <tr>
               <td>{{ form.instance.player.name }}</td>
-              <td>{{ form.buy_in }}</td>
+              <td>{{ form.initial_buy_in }}</td>
+              <td>{{ form.re_buy }}</td>
+              <td>{{ form.id }}  <!-- 🔹 Hier hinzufügen! Verstecktes Feld für ID -->
             </tr>
           {% endfor %}
         </tbody>
@@ -26,4 +42,5 @@
       </div>
     </form>
   </div>
+  {% if messages %}...{% endif %}
 {% endblock %}

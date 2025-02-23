@@ -22,6 +22,7 @@
                 </p>
 
                 <!-- Display the players associated with the active event in cards -->
+                <!-- #TODO Continue: Add re-buy-button and logic behind-->
                 <strong>Players:</strong>
                 <div class="row">
                   {% for participation in event.players %}
@@ -29,7 +30,8 @@
                       <div class="card">
                         <div class="card-body">
                           <h5 class="card-title">{{ participation.player.name }}</h5>
-                          <p class="card-text">Buy-In: €{{ participation.buy_in }}</p>
+                          <p class="card-text">Buy-In: €{{ participation.total_buy_in }}</p>
+                           <a href="{% url 'buy_in' event.id %}" class="btn btn-success">Re-Buy</a>
                         </div>
                       </div>
                     </div>

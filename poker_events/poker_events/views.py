@@ -5,6 +5,8 @@ from django.db import transaction
 from poker_data.models import Player, Event, EventParticipation
 from django.utils import timezone
 from django.core.exceptions import ValidationError
+from django.contrib import messages
+from decimal import Decimal
 
 # The following view calculates the necessary data for home.html
 def home(request):
@@ -31,6 +33,9 @@ def home(request):
     # Fetch the players for each active event
     for event in active_events:
         event.players = event.eventparticipation_set.all()  # Get players associated with the event
+
+        for participation in event.players:
+            participation.total_buy_in = participation.initial_buy_in + participation.re_buy  # 🛠 Summe aus Initial + Re-Buys
 
     # Check if any events are active
     active_events_exist = active_events.exists()
@@ -81,7 +86,8 @@ def add_event(request):
             pot=pot,
             active=active,
             asop=asop,
-            host_player=host_player
+            host_player=host_player,
+            remaining_chips=pot  # 🛠 Initialisiere die verbleibenden Chips mit dem Pot-Wert
         )
         
         event_created = True  # Set the flag to True when the event is created
@@ -122,16 +128,25 @@ def add_players(request, event_id):
 
         # Spieler hinzufügen, wenn der "Cancel"-Button nicht geklickt wurde
         selected_players = request.POST.getlist('players')  # Get selected players from the form
+        
+        total_initial_buy_in = Decimal('0.00')  # 🛠 Initialisieren der Gesamt-Buy-Ins
+
         for player_id in selected_players:
             player = Player.objects.get(id=player_id)
-            buy_in_value = request.POST.get(f'buy_in_{player_id}', 0)  # Get the buy-in value for the Player
+            initial_buy_in_value = Decimal(request.POST.get(f'initial_buy_in_{player_id}', '0'))  # 🛠 Korrektur des Variablennamens
 
-            # Create EventParticipation with buy-in value
+            # Create EventParticipation with initial buy-in value
             EventParticipation.objects.create(
                 event=event, 
                 player=player,
-                buy_in=buy_in_value  # Set the buy-in value for the player
+                initial_buy_in=initial_buy_in_value  # 🛠 Korrektes Feld
             )
+
+            total_initial_buy_in += initial_buy_in_value  # 🛠 Summe der Initial-Buy-Ins berechnen
+
+        # 🛠 Pot-Update: Subtrahiere die gesamten Initial Buy-Ins
+        event.pot -= total_initial_buy_in
+        event.save()
 
         # Redirect to home after adding players
         return redirect('home')
@@ -141,32 +156,67 @@ def add_players(request, event_id):
         'players': players
     })
 
-#View for buy_in in the beginning of an event as well as for re-buys
+
+# View for buy_in in the beginning of an event as well as for re-buys
 def buy_in(request, event_id):
     event = get_object_or_404(Event, id=event_id)
     participations = EventParticipation.objects.filter(event=event)
 
-    # Create a modelformset for EventParticipation
     BuyInFormSet = modelformset_factory(
         EventParticipation,
-        fields=('buy_in',),
-        extra=0  # No extra empty forms
+        fields=('initial_buy_in', 're_buy',),  # Korrektur: Wir bearbeiten nur initial_buy_in und re_buy!
+        extra=0
     )
 
     if request.method == 'POST':
+        print("POST-Daten:", request.POST)
+
         formset = BuyInFormSet(request.POST, queryset=participations)
+
         if formset.is_valid():
+            instances = formset.save(commit=False)
+            print("Formset ist gültig, speichere Daten...")
+
             with transaction.atomic():
-                # Update the buy_in field for each player and adjust the event's pot
+                total_initial_buy_in = Decimal('0.00')
+                total_re_buy = Decimal('0.00')
+
                 for form in formset:
                     participation = form.save(commit=False)
-                    event.pot -= participation.buy_in  # Subtract buy-in from event pot
+                    initial_buy_in = Decimal(form.cleaned_data.get('initial_buy_in', '0.00'))  # Verhindert NoneType-Fehler
+                    re_buy = Decimal(form.cleaned_data.get('re_buy', '0.00'))  # Verhindert NoneType-Fehler
+
+                    # Initial Buy-In nur speichern, wenn der Wert gesetzt wurde
+                    if initial_buy_in > Decimal('0.00') and participation.initial_buy_in == 0:
+                        participation.initial_buy_in = initial_buy_in
+                        total_initial_buy_in += initial_buy_in  # Summe des Initial-Buy-In berechnen
+
+                    # Re-Buy nur speichern, wenn der Wert gesetzt wurde
+                    if re_buy > Decimal('0.00'):
+                        if event.remaining_chips < re_buy:
+                            messages.error(request, "Nicht genügend Chips im Event für dieses Re-Buy!")
+                            return redirect('buy_in', event_id=event.id)
+
+                        total_re_buy += re_buy  # Summe der Re-Buys berechnen
+                        participation.re_buy += re_buy  # Re-Buy zum bestehenden Wert hinzufügen
+                        
                     participation.save()
+
+                # Pot-Update nach allen Änderungen
+                event.pot -= total_initial_buy_in + total_re_buy  # Pot wird um Initial-Buy-In und Re-Buys reduziert
+                event.remaining_chips -= total_re_buy  # Remaining-Chips nach Re-Buys aktualisieren
                 event.save()
 
-            return redirect('home')  # Redirect to home after saving
+            messages.success(request, "Buy-In und/oder Re-Buy erfolgreich gespeichert!")  # Erfolgsmeldung
+            return redirect('home')  # Weiterleitung zur Startseite
+
+        else:
+            messages.error(request, "Fehler beim Speichern der Buy-Ins und Re-Buys!")  # Fehler ausgeben
+            print("Formset Fehler:", formset.errors)  # Debugging in der Konsole
+            
 
     else:
         formset = BuyInFormSet(queryset=participations)
 
     return render(request, 'buy_in.html', {'formset': formset, 'event': event})
+

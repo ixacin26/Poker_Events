@@ -19,8 +19,8 @@
             <input type="checkbox" name="players" value="{{ player.id }}" class="form-check-input" id="player_{{ player.id }}" />
             <label class="form-check-label" for="player_{{ player.id }}">{{ player.name }}</label><br>
           <!-- Buy-In Input for each selected player -->
-            <label for="buy_in_{{ player.id }}" class="ml-2">Buy-In:</label>
-            <input type="number" name="buy_in_{{ player.id }}" id="buy_in_{{ player.id }}" class="form-control mt-1 w-25" step="5" min="0" value ="0"/>
+            <label for="initial_buy_in_{{ player.id }}" class="ml-2">Buy-In:</label>
+            <input type="number" name="initial_buy_in_{{ player.id }}" id="initial_buy_in_{{ player.id }}" class="form-control mt-1 w-25" step="5" min="0" value ="0"/>
           </div>
         {% endfor %}
       </div>
